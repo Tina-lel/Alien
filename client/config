@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# General Config
+
+export NAME="User"
+
+# Connection Config
+
+export HOST="127.0.0.1"
+export PORT="1234"
+export IPORT="1235"

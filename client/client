@@ -1,0 +1,56 @@
+#!/bin/bash
+export DIRMAIN=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" && pwd )
+source $DIRMAIN/config
+
+echo -e "Alien (V.1)\n"
+
+case $1 in
+	-h)
+		echo -e "to join, start the script without any arguments"
+		echo -e "-h: this message"
+		;;
+	"")
+		echo -e "Enter Passphrase for host: $HOST"
+		read -r -e PASS
+		echo -e "Connecting..."
+		mkdir -p $DIRMAIN/.tmp
+
+		while :
+		do
+			watch -n 1 -t "socat -u tcp:$HOST:$PORT - | gpg -q -d --cipher-algo AES256 --batch --textmode --yes --passphrase $PASS - | tail -n $(($LINES - 0))"
+			reset > /dev/null 2>&1
+			clear
+
+			while :
+			do
+				read -r -e MSG
+
+				case $MSG in
+					!back)
+						break
+						;;
+					!exit)
+						exit
+						;;
+					!help)
+						echo -e "!help: this message"
+						echo -e "!back: go back to the chat"
+						echo -e "!exit: exit the programm"
+						;;
+					*)
+						echo -e "$NAME: $MSG" >> $DIRMAIN/.tmp/tmp
+						gpg -c --cipher-algo AES256 --batch --yes --passphrase $PASS $DIRMAIN/.tmp/tmp
+						cat $DIRMAIN/.tmp/tmp.gpg | socat -U tcp:$HOST:$IPORT -
+						rm -f $DIRMAIN/.tmp/tmp
+						rm -f $DIRMAIN/.tmp/tmp.gpg
+						clear
+						break
+						;;
+				esac
+			done
+		done
+		;;
+	*)
+		echo "unknown argument, -h for help"
+		;;
+esac
