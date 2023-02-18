@@ -1,0 +1,4 @@
+#!/bin/bash
+export PORT="1234" #TCP
+export IPORT="1235" #TCP
+export UPORT="1236" #TCP
