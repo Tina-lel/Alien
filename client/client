@@ -1,0 +1,85 @@
+#!/bin/bash
+export DIRMAIN=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" && pwd )
+source $DIRMAIN/config
+
+echo -e "Alien (V.1)\n"
+
+case $1 in
+	-h)
+		echo -e "to join, start the script without any arguments"
+		echo -e "-h: this message"
+		;;
+	"")
+		echo -e "Enter Passphrase for host: $HOST"
+		read -r -e PASS
+		echo -e "Connecting..."
+		mkdir -p $DIRMAIN/.tmp
+
+		while :
+		do
+			watch -n 1 -t "socat -u tcp:$HOST:$PORT - | gpg -q -d --cipher-algo AES256 --batch --textmode --yes --passphrase $PASS - | tail -n $(($LINES - 0))"
+			reset > /dev/null 2>&1
+			clear
+
+			while :
+			do
+				read -r -e MSG
+
+				case $MSG in
+					!back)
+						clear
+						break
+						;;
+					!exit)
+						exit
+						;;
+					!help)
+						echo -e "!help: this message"
+						echo -e "!down: download files"
+						echo -e "!back: go back to the chat"
+						echo -e "!exit: exit the programm"
+						;;
+					!down)
+						echo -e "DOW" >> $DIRMAIN/.tmp/tmp
+						gpg -c --cipher-algo AES256 --batch --yes --passphrase $PASS $DIRMAIN/.tmp/tmp
+						cat $DIRMAIN/.tmp/tmp.gpg | socat -U tcp:$HOST:$IPORT -
+						rm -f $DIRMAIN/.tmp/tmp
+						rm -f $DIRMAIN/.tmp/tmp.gpg
+
+						sleep 0.5
+						echo -e ""
+						echo "$NAME accessed files" | gpg -c --cipher-algo AES256 --batch --yes --passphrase $PASS | socat tcp:$HOST:$UPORT - | gpg -q -d --cipher-algo AES256 --batch --yes --passphrase $PASS -
+						echo -e "\nwhat to download?"
+						read -r -e D_FILE
+						echo -e "$D_FILE" | gpg -c --cipher-algo AES256 --batch --yes --passphrase $PASS | socat tcp:$HOST:$UPORT -
+						sleep 0.5
+						echo "" | socat tcp:$HOST:$UPORT - >> $DIRMAIN/.tmp/file.gpg
+						gpg -d -q -o $DOWNLOAD_DIR/$D_FILE --cipher-algo AES256 --batch --textmode --yes --passphrase $PASS $DIRMAIN/.tmp/file.gpg
+						rm -f $DIRMAIN/.tmp/file.gpg
+						if [[ -f $DOWNLOAD_DIR/$D_FILE ]];
+						then
+							echo -e "saved to $DOWNLOAD_DIR"
+							sleep 1
+							break
+						else
+							echo -e "\nSomething went wrong"
+							echo -e "either you got the name wrong, the server has problems, or something is broken at the client side"
+						fi
+						;;
+					*)
+						echo -e "MSG\n$NAME: $MSG" >> $DIRMAIN/.tmp/tmp
+						gpg -c --cipher-algo AES256 --batch --yes --passphrase $PASS $DIRMAIN/.tmp/tmp
+						cat $DIRMAIN/.tmp/tmp.gpg | socat -U tcp:$HOST:$IPORT -
+						rm -f $DIRMAIN/.tmp/tmp
+						rm -f $DIRMAIN/.tmp/tmp.gpg
+						clear
+						break
+						;;
+				esac
+			done
+		done
+		;;
+	*)
+		echo "unknown argument, -h for help"
+		;;
+esac
