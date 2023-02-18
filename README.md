@@ -88,6 +88,8 @@ stop: kill the server
 
 !help: this message
 
+!down: download files
+
 !back: go back to the chat
 
 !exit: exit the programm
