@@ -60,6 +60,7 @@ case $1 in
 						then
 							echo -e "saved to $DOWNLOAD_DIR"
 							sleep 1
+							clear
 							break
 						else
 							echo -e "\nSomething went wrong"
